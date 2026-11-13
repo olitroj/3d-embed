@@ -11,7 +11,7 @@ int get_x_intersect(const unsigned char* e, int scanline) {
     int y2 = get_edge_y2(e);
 
     /* Horizontal line intersection - Ignore */
-    if (y2 == y1 == scanline)
+    if (y2 == y1)
         return NO_INTERSECT;
 
     /* Scanline not in Y range - No intersection */

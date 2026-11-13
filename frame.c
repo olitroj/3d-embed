@@ -8,8 +8,13 @@ void clear_buffer() {
         buffer[i] = 0;
 }
 void draw_line(int y, int x_start, int x_end) {
-    for (int x = x_start; x <= x_end; x++)
-        buffer[x + WIDTH*y] = 1;
+    if (x_start > x_end) {
+        for (int x = x_start; x >= x_end; x--)
+            buffer[x + WIDTH*y] = 1;
+    } else {
+        for (int x = x_start; x <= x_end; x++)
+            buffer[x + WIDTH*y] = 1;
+    }
 }
 void print_buffer() {
     for (int i = 0; i < HEIGHT; i++) {
