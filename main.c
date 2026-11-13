@@ -26,16 +26,14 @@ int get_x_intersect(const unsigned char* e, int scanline) {
 }
 
 void draw_intersect_intervals() {
-    /* Step (sampling distance) in coordinate space for each pixel in frame */
-    /* Scanline starts at max_y floored to multiple of step_y */
-    int step_y = (COORD_HEIGHT - 1) / (HEIGHT - 1);
-    int scanline = get_edge_max_y(edges) / step_y * step_y;
-    int min_y = get_edge_min_y(edges+sizeof(edges)-2);
+    int scanpixel = get_edge_max_y(edges) * HEIGHT_SCALE;
+    int min_pixel_y = get_edge_min_y(edges+sizeof(edges)-2) * HEIGHT_SCALE;
 
-    printf("%d - %d, step %d\n", get_edge_max_y(edges), get_edge_min_y(edges+sizeof(edges)-2), step_y);
+    /* For each pixel row */
+    while (scanpixel >= min_pixel_y) {
+        /* Calculate the scanline at that pixel (more accurate than a constant step value) */
+        int scanline = (scanpixel * (COORD_HEIGHT - 1)) / (HEIGHT - 1);
 
-    /* For each scanline */
-    while (scanline >= min_y) {
         int int_stack[2];
         int sptr = 0;
 
@@ -53,12 +51,12 @@ void draw_intersect_intervals() {
 
         /* Draw each interval */
         while (--sptr > 0) {
-            draw_line(scanline * HEIGHT_SCALE, int_stack[sptr] * HEIGHT_SCALE, int_stack[sptr-1] * HEIGHT_SCALE);
+            draw_line(scanpixel, int_stack[sptr] * HEIGHT_SCALE, int_stack[sptr-1] * HEIGHT_SCALE);
             printf("Intersect Y=%d: %d %d -> Y=%d: %d %d\n", scanline, int_stack[sptr], int_stack[sptr-1],
                 scanline * HEIGHT_SCALE, int_stack[sptr] * HEIGHT_SCALE, int_stack[sptr-1] * HEIGHT_SCALE);
         }
 
-        scanline -= step_y;
+        scanpixel--;
     }
 }
 
@@ -121,13 +119,13 @@ void draw_intersect_intervals_float() {
 void generate_frame() {
     qsort(edges, sizeof(edges)/2, sizeof(unsigned char)*2, comp_edges);
     draw_intersect_intervals();
-    //print_buffer();
+    print_buffer();
 }
 
 void generate_frame_float() {
     qsort(edges, sizeof(edges)/2, sizeof(unsigned char)*2, comp_edges);
     draw_intersect_intervals_float();
-    //print_buffer();
+    print_buffer();
 }
 
 int main() {
