@@ -25,10 +25,11 @@ int get_x_intersect(const unsigned char* e, int scanline) {
     return x1 + ((scanline - y1) * (x2 - x1) / (y2 - y1)); // Will need some error compensation
 }
 
-/* Converts coordinate space value to pixel space value. Uses integer division with rounding */
+/* Converts coordinate space value to pixel space value (floors to lower pixel - 5.7 belongs to pixel 5 not 6) */
 int coord_to_pixel_space(int coord) {
-    return (coord * (HEIGHT - 1) + ((COORD_HEIGHT - 1) >> 1)) / (COORD_HEIGHT - 1);
+    return coord * HEIGHT_SCALE;
 }
+/* Converts pixel space value to coordinate space value (rounds/floors correctly) */
 int pixel_to_coord_space(int pixel) {
     return (pixel * (COORD_HEIGHT - 1) + ((HEIGHT - 1) >> 1)) / (HEIGHT - 1);
 }
@@ -60,9 +61,9 @@ void draw_intersect_intervals() {
 
         /* Draw each interval */
         while (--sptr > 0) {
-            draw_line(curr_pixel_row, int_stack[sptr] * HEIGHT_SCALE, int_stack[sptr-1] * HEIGHT_SCALE);
+            draw_line(curr_pixel_row, coord_to_pixel_space(int_stack[sptr]), coord_to_pixel_space(int_stack[sptr-1]));
             printf("Intersect Y=%d: %d %d -> Y=%d: %d %d\n", scanline, int_stack[sptr], int_stack[sptr-1],
-                scanline * HEIGHT_SCALE, int_stack[sptr] * HEIGHT_SCALE, int_stack[sptr-1] * HEIGHT_SCALE);
+                curr_pixel_row, coord_to_pixel_space(int_stack[sptr]), coord_to_pixel_space(int_stack[sptr-1]));
         }
 
         curr_pixel_row--;
