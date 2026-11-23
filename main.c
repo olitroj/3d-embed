@@ -25,15 +25,23 @@ int get_x_intersect(const unsigned char* e, int scanline) {
     return x1 + ((scanline - y1) * (x2 - x1) / (y2 - y1)); // Will need some error compensation
 }
 
+/* Converts coordinate space value to pixel space value. Uses integer division with rounding */
+int coord_to_pixel_space(int coord) {
+    return (coord * (HEIGHT - 1) + ((COORD_HEIGHT - 1) >> 1)) / (COORD_HEIGHT - 1);
+}
+int pixel_to_coord_space(int pixel) {
+    return (pixel * (COORD_HEIGHT - 1) + ((HEIGHT - 1) >> 1)) / (HEIGHT - 1);
+}
+
 void draw_intersect_intervals() {
-    int curr_pixel_row = get_edge_max_y(edges) * HEIGHT_SCALE;
-    int min_pixel_row = get_edge_min_y(edges+sizeof(edges)-2) * HEIGHT_SCALE;
+    int curr_pixel_row = coord_to_pixel_space(get_edge_max_y(edges));
+    int min_pixel_row = coord_to_pixel_space(get_edge_min_y(edges+sizeof(edges)-2));
 
     /* For each pixel row */
     while (curr_pixel_row >= min_pixel_row) {
         /* Calculate the scanline (in coord space) for that row */
         /* This is more accurate than using a constant step in coord space */
-        int scanline = (curr_pixel_row * (COORD_HEIGHT - 1)) / (HEIGHT - 1);
+        int scanline = pixel_to_coord_space(curr_pixel_row);
 
         int int_stack[2];
         int sptr = 0;
