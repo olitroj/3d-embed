@@ -26,13 +26,14 @@ int get_x_intersect(const unsigned char* e, int scanline) {
 }
 
 void draw_intersect_intervals() {
-    int scanpixel = get_edge_max_y(edges) * HEIGHT_SCALE;
-    int min_pixel_y = get_edge_min_y(edges+sizeof(edges)-2) * HEIGHT_SCALE;
+    int curr_pixel_row = get_edge_max_y(edges) * HEIGHT_SCALE;
+    int min_pixel_row = get_edge_min_y(edges+sizeof(edges)-2) * HEIGHT_SCALE;
 
     /* For each pixel row */
-    while (scanpixel >= min_pixel_y) {
-        /* Calculate the scanline at that pixel (more accurate than a constant step value) */
-        int scanline = (scanpixel * (COORD_HEIGHT - 1)) / (HEIGHT - 1);
+    while (curr_pixel_row >= min_pixel_row) {
+        /* Calculate the scanline (in coord space) for that row */
+        /* This is more accurate than using a constant step in coord space */
+        int scanline = (curr_pixel_row * (COORD_HEIGHT - 1)) / (HEIGHT - 1);
 
         int int_stack[2];
         int sptr = 0;
@@ -51,12 +52,12 @@ void draw_intersect_intervals() {
 
         /* Draw each interval */
         while (--sptr > 0) {
-            draw_line(scanpixel, int_stack[sptr] * HEIGHT_SCALE, int_stack[sptr-1] * HEIGHT_SCALE);
+            draw_line(curr_pixel_row, int_stack[sptr] * HEIGHT_SCALE, int_stack[sptr-1] * HEIGHT_SCALE);
             printf("Intersect Y=%d: %d %d -> Y=%d: %d %d\n", scanline, int_stack[sptr], int_stack[sptr-1],
                 scanline * HEIGHT_SCALE, int_stack[sptr] * HEIGHT_SCALE, int_stack[sptr-1] * HEIGHT_SCALE);
         }
 
-        scanpixel--;
+        curr_pixel_row--;
     }
 }
 

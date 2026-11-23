@@ -3,7 +3,7 @@
 #define COORD_WIDTH     256
 #define COORD_HEIGHT    256
 unsigned char verts[] = {
-    64, 192,
+    20, 220,
     192, 192,
     128, 64
 };
