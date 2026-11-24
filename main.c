@@ -114,7 +114,7 @@ void draw_intersect_intervals_float() {
 
         /* Draw each interval */
         while (--sptr > 0) {
-            draw_line((int)scanline*PIXEL_SCALE, (int)int_stack[sptr]*PIXEL_SCALE, (int)int_stack[sptr-1]*PIXEL_SCALE);
+            draw_line((int)scanline*PIXEL_SCALE, (int)(int_stack[sptr]*PIXEL_SCALE), (int)(int_stack[sptr-1]*PIXEL_SCALE));
             printf("Intersect Y=%f: %f %f -> Y=%f: %f %f\n", scanline, int_stack[sptr], int_stack[sptr-1],
                 scanline*PIXEL_SCALE, int_stack[sptr]*PIXEL_SCALE, int_stack[sptr-1]*PIXEL_SCALE);
         }
