@@ -1,7 +1,8 @@
 /* Frame Buffer */
-#define WIDTH           50
-#define HEIGHT          50
-#define HEIGHT_SCALE    (HEIGHT - 1) / (COORD_HEIGHT - 1)
+#define WIDTH               50
+#define HEIGHT              50
+#define PIXEL_SCALE         (HEIGHT - 1) / (COORD_HEIGHT - 1)
+#define COORD_SCALE_DENUM   (HEIGHT - 1)
 char buffer[WIDTH*HEIGHT];
 void clear_buffer() {
     for (int i = 0; i < sizeof(buffer); i++)

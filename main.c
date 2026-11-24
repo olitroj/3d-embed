@@ -4,9 +4,9 @@
 #include "geometry.c"
 #include "frame.c"
 
-/* Get X intersect between edge and scanline */
 #define NO_INTERSECT   -1
-int get_x_intersect(const unsigned char* e, int scanline) {
+/* Returns X intersect (in pixel space) between edge and pixel row */
+int get_x_intersect(const unsigned char* e, int pixel_row) {
     int y1 = get_edge_y1(e);
     int y2 = get_edge_y2(e);
 
@@ -15,42 +15,39 @@ int get_x_intersect(const unsigned char* e, int scanline) {
         return NO_INTERSECT;
 
     /* Scanline not in Y range - No intersection */
+    /* TODO - Move this logic to draw_intersect_intervals to reduce number of checked edges */
+    int scanline_num = pixel_row * (COORD_HEIGHT - 1);
     int min_y = y1 < y2 ? y1 : y2;
     int max_y = y1 > y2 ? y1 : y2;
-    if (scanline <= min_y || scanline > max_y)
+    if (scanline_num <= min_y * COORD_SCALE_DENUM || scanline_num > max_y * COORD_SCALE_DENUM)
         return NO_INTERSECT;
 
     int x1 = get_edge_x1(e);
     int x2 = get_edge_x2(e);
-    return x1 + ((scanline - y1) * (x2 - x1) / (y2 - y1)); // Will need some error compensation
+
+    /* Are constant for each edge, can be pre-computed */
+    int dx = x2 - x1;
+    int x_den = COORD_SCALE_DENUM * (y2 - y1);
+
+    int x_num = x1 * x_den + (scanline_num - y1 * COORD_SCALE_DENUM) * dx;
+    return (x_num * (HEIGHT - 1)) / (x_den * (COORD_HEIGHT - 1));
 }
 
-/* Converts coordinate space value to pixel space value (floors to lower pixel - 5.7 belongs to pixel 5 not 6) */
-int coord_to_pixel_space(int coord) {
-    return coord * HEIGHT_SCALE;
-}
-/* Converts pixel space value to coordinate space value (rounds/floors correctly) */
-int pixel_to_coord_space(int pixel) {
-    return (pixel * (COORD_HEIGHT - 1) + ((HEIGHT - 1) >> 1)) / (HEIGHT - 1);
-}
-
+/* Calculates edge intersects for each row, fills them in the pixel buffer */
 void draw_intersect_intervals() {
-    int curr_pixel_row = coord_to_pixel_space(get_edge_max_y(edges));
-    int min_pixel_row = coord_to_pixel_space(get_edge_min_y(edges+sizeof(edges)-2));
+    int curr_pixel_row = get_edge_max_y(edges) * PIXEL_SCALE;
+    int min_pixel_row = get_edge_min_y(edges+sizeof(edges)-2) * PIXEL_SCALE;
 
     /* For each pixel row */
     while (curr_pixel_row >= min_pixel_row) {
-        /* Calculate the scanline (in coord space) for that row */
-        /* This is more accurate than using a constant step in coord space */
-        int scanline = pixel_to_coord_space(curr_pixel_row);
-
+        /* TODO : Safely determine the size of this stack (somehow calculate maximum intersections in a single row) */
         int int_stack[2];
         int sptr = 0;
 
         /* For each edge */
         for (int e = 0; e < sizeof(edges); e += 2) {
             unsigned char* edge = edges+e;
-            int x_intersect = get_x_intersect(edge, scanline);
+            int x_intersect = get_x_intersect(edge, curr_pixel_row);
 
             if (x_intersect != NO_INTERSECT) {
                 int_stack[sptr++] = x_intersect;
@@ -61,9 +58,9 @@ void draw_intersect_intervals() {
 
         /* Draw each interval */
         while (--sptr > 0) {
-            draw_line(curr_pixel_row, coord_to_pixel_space(int_stack[sptr]), coord_to_pixel_space(int_stack[sptr-1]));
-            printf("Intersect Y=%d: %d %d -> Y=%d: %d %d\n", scanline, int_stack[sptr], int_stack[sptr-1],
-                curr_pixel_row, coord_to_pixel_space(int_stack[sptr]), coord_to_pixel_space(int_stack[sptr-1]));
+            draw_line(curr_pixel_row, int_stack[sptr], int_stack[sptr-1]);
+            printf("Intersect Y=%d/%d -> Y=%d: %d %d\n", curr_pixel_row * (COORD_HEIGHT - 1), (HEIGHT - 1),
+                curr_pixel_row, int_stack[sptr], int_stack[sptr-1]);
         }
 
         curr_pixel_row--;
@@ -117,9 +114,9 @@ void draw_intersect_intervals_float() {
 
         /* Draw each interval */
         while (--sptr > 0) {
-            draw_line((int)scanline*HEIGHT_SCALE, (int)int_stack[sptr]*HEIGHT_SCALE, (int)int_stack[sptr-1]*HEIGHT_SCALE);
+            draw_line((int)scanline*PIXEL_SCALE, (int)int_stack[sptr]*PIXEL_SCALE, (int)int_stack[sptr-1]*PIXEL_SCALE);
             printf("Intersect Y=%f: %f %f -> Y=%f: %f %f\n", scanline, int_stack[sptr], int_stack[sptr-1],
-                scanline*HEIGHT_SCALE, int_stack[sptr]*HEIGHT_SCALE, int_stack[sptr-1]*HEIGHT_SCALE);
+                scanline*PIXEL_SCALE, int_stack[sptr]*PIXEL_SCALE, int_stack[sptr-1]*PIXEL_SCALE);
         }
 
         scanline -= step_y;

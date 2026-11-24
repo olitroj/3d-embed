@@ -10,14 +10,13 @@ Currently the scanline algorithm has a float and integer approximation implement
         - Steps scanline by offset
 - The integer approximation:
     - For each pixel row:
-        - Calculates scanline position in coordinate space based on current pixel row (1 division per row)
+        - Calculates scanline position in coordinate space based on current pixel row (fractional representation)
         - Calculates intersection between edges and scanline (1 division per intersection)
         - Repeats for next pixel row
 
 For increasing accuracy:
 - Calculate scanline position for each row (variable coordinate space step) instead of a fixed step
-- Correctly round when converting position from coordinate space to pixel space and vice-versa (instead of just flooring all results)
-- `TODO` : Add error compensation to the X intersection calculation
+- Reduce number of division operators to one with fractional representation (accumulating numerator and denominator in seperate stack varaibles)
 
 ### TODO - Big goals
 - Implement third dimension
